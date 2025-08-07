@@ -6,7 +6,7 @@ class EnvironmentConfig {
   private env: ReturnType<typeof getEnv>;
 
   private constructor() {
-    this.env = getEnv();
+    this.env = getEnv(this.isClient);
   }
 
   public static getInstance(): EnvironmentConfig {
@@ -27,6 +27,23 @@ class EnvironmentConfig {
 
   get isTest(): boolean {
     return this.env.NODE_ENV === 'test';
+  }
+
+  // Execution environment detection
+  get isClient(): boolean {
+    return typeof window !== 'undefined';
+  }
+
+  get isServer(): boolean {
+    return typeof window === 'undefined';
+  }
+
+  get isBrowser(): boolean {
+    return this.isClient;
+  }
+
+  get isNodeJS(): boolean {
+    return this.isServer;
   }
 
   // App configuration
@@ -62,11 +79,7 @@ class EnvironmentConfig {
 
   // API configuration
   get authApiUrl(): string {
-    return this.env.AUTH_API_URL;
-  }
-
-  get publicApiUrl(): string {
-    return this.env.NEXT_PUBLIC_API_URL;
+    return this.env.PRIMARY_API_URL;
   }
 
   // Database configuration
@@ -97,6 +110,12 @@ class EnvironmentConfig {
         isDevelopment: this.isDevelopment,
         isProduction: this.isProduction,
       },
+      runtime: {
+        isClient: this.isClient,
+        isServer: this.isServer,
+        isBrowser: this.isBrowser,
+        isNodeJS: this.isNodeJS,
+      },
       auth: {
         nextAuthUrl: this.nextAuthUrl,
         nextAuthSecret: this.nextAuthSecret,
@@ -107,7 +126,6 @@ class EnvironmentConfig {
       },
       api: {
         authUrl: this.authApiUrl,
-        publicUrl: this.publicApiUrl,
       },
       features: {
         googleOAuth: this.isGoogleOAuthEnabled,
@@ -130,7 +148,6 @@ class EnvironmentConfig {
     if (this.isDevelopment) {
       try {
         new URL(this.authApiUrl);
-        new URL(this.publicApiUrl);
       } catch (error) {
         errors.push('Invalid API URL format');
       }
@@ -148,11 +165,7 @@ class EnvironmentConfig {
       }
 
       if (!this.authApiUrl.startsWith('https://')) {
-        errors.push('AUTH_API_URL must use HTTPS in production');
-      }
-
-      if (!this.publicApiUrl.startsWith('https://')) {
-        errors.push('NEXT_PUBLIC_API_URL must use HTTPS in production');
+        errors.push('PRIMARY_API_URL must use HTTPS in production');
       }
     }
 

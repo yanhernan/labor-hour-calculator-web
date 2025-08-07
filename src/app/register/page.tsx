@@ -5,13 +5,16 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRegister } from '@/hooks/queries/auth';
 
 // Define the validation schema
 const registerSchema = z.object({
   firstName: z.string().min(1, 'First name is required').trim(),
   lastName: z.string().min(1, 'Last name is required').trim(),
-  email: z.string().min(1, 'Email is required').email('Email is invalid'),
+  company: z.string().min(1, 'Company name is required').trim(),
+  email: z.email('Email is invalid').min(1, 'Email is required'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string().min(1, 'Please confirm your password')
 }).refine((data) => data.password === data.confirmPassword, {
@@ -23,32 +26,40 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 
 export default function Register() {
   const [socialError, setSocialError] = useState<string>('');
+  const router = useRouter();
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
     reset
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     mode: 'onChange' // Validate on change for better UX
   });
 
+  const registerMutation = useRegister();
+
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Here you would typically make an API call to register the user
-      console.log('Registration data:', data);
+      await registerMutation.mutateAsync({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        company: data.company,
+        email: data.email,
+        password: data.password,
+      });
       
       // Reset form after successful registration
       reset();
       
-      alert('Registration successful!');
+      // Redirect to sign-in page or show success message
+      alert('Registration successful! Please sign in with your new account.');
+      router.push('/auth/signin');
+      
     } catch (error) {
       console.error('Registration error:', error);
-      alert('Registration failed. Please try again.');
+      // Error handling is done by the mutation's onError callback
     }
   };
 
@@ -76,9 +87,11 @@ export default function Register() {
           </p>
         </div>
 
-        {socialError && (
+        {(socialError || registerMutation.error) && (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3">
-            <p className="text-sm text-red-600 dark:text-red-400">{socialError}</p>
+            <p className="text-sm text-red-600 dark:text-red-400">
+              {socialError || (registerMutation.error as any)?.message || 'Registration failed. Please try again.'}
+            </p>
           </div>
         )}
 
@@ -152,6 +165,27 @@ export default function Register() {
               )}
             </div>
 
+            {/* Company */}
+            <div>
+              <label htmlFor="company" className="block text-sm font-medium text-foreground">
+                Company Name
+              </label>
+              <input
+                id="company"
+                type="text"
+                {...register('company')}
+                className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors ${
+                  errors.company
+                    ? 'border-red-500 bg-red-50 dark:bg-red-900/20'
+                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                }`}
+                placeholder="Enter your company name"
+              />
+              {errors.company && (
+                <p className="mt-1 text-sm text-red-600">{errors.company.message}</p>
+              )}
+            </div>
+
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-foreground">
@@ -220,10 +254,10 @@ export default function Register() {
           <div>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={registerMutation.isPending}
               className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? (
+              {registerMutation.isPending ? (
                 <span className="flex items-center">
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

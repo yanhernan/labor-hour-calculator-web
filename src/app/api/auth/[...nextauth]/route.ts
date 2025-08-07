@@ -3,6 +3,7 @@ import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { NextAuthOptions } from 'next-auth';
 import envConfig from '@/lib/env/config';
+import logger from '@/lib/logging';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -23,11 +24,25 @@ export const authOptions: NextAuthOptions = {
 
         try {
           // Call your authentication API using the AuthService
-          const { AuthService } = await import('@/services/api');
+          const { api } = await import('@/services/api');
           
-          const response = await AuthService.login({
+          logger.logAuth({
+            type: 'login',
+            email: credentials.email,
+            success: false, // Will update if successful
+          });
+
+          const response = await api.auth.login({
             email: credentials.email,
             password: credentials.password,
+          });
+
+          // Log successful authentication
+          logger.logAuth({
+            type: 'login',
+            email: credentials.email,
+            userId: response.user.id,
+            success: true,
           });
 
           // Return user object with token
@@ -40,7 +55,18 @@ export const authOptions: NextAuthOptions = {
           };
 
         } catch (error) {
-          console.error('Error during authentication:', error);
+          logger.logAuth({
+            type: 'login',
+            email: credentials.email,
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+          
+          logger.error('Authentication failed', {
+            email: credentials.email,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          }, error instanceof Error ? error : undefined);
+          
           return null;
         }
       }

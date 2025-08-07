@@ -6,7 +6,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   
   // NextAuth configuration
-  NEXTAUTH_URL: z.string().url('NEXTAUTH_URL must be a valid URL'),
+  NEXTAUTH_URL: z.url('NEXTAUTH_URL must be a valid URL'),
   NEXTAUTH_SECRET: z.string().min(1, 'NEXTAUTH_SECRET is required'),
   
   // Google OAuth (optional)
@@ -14,8 +14,7 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   
   // API configuration
-  AUTH_API_URL: z.string().url('AUTH_API_URL must be a valid URL'),
-  NEXT_PUBLIC_API_URL: z.string().url('NEXT_PUBLIC_API_URL must be a valid URL'),
+  PRIMARY_API_URL: z.url('PRIMARY_API_URL must be a valid URL'),
   
   // Database (if you add one later)
   DATABASE_URL: z.string().optional(),
@@ -58,23 +57,23 @@ export interface EnvValidationResult {
 }
 
 // Validate environment variables
-export function validateEnv(): EnvValidationResult {
+export function validateEnv(isClient: boolean): EnvValidationResult {
   const missing: string[] = [];
   const warnings: string[] = [];
-  
-  // Check for required variables
-  const requiredVars = [
-    'NEXTAUTH_URL',
-    'NEXTAUTH_SECRET',
-    'AUTH_API_URL',
-    'NEXT_PUBLIC_API_URL'
-  ];
-  
-  requiredVars.forEach(varName => {
-    if (!process.env[varName]) {
-      missing.push(varName);
-    }
-  });
+  if(!isClient){
+    // Check for required variables
+    const requiredVars = [
+      'NEXTAUTH_URL',
+      'NEXTAUTH_SECRET',
+      'PRIMARY_API_URL',
+    ];
+    
+    requiredVars.forEach(varName => {
+      if (!process.env[varName]) {
+        missing.push(varName);
+      }
+    });
+  }
   
   // Check for optional but recommended variables
   const recommendedVars = [
@@ -89,6 +88,7 @@ export function validateEnv(): EnvValidationResult {
   });
   
   try {
+    
     const result = refinedEnvSchema.parse(process.env);
     
     return {
@@ -112,10 +112,10 @@ export function validateEnv(): EnvValidationResult {
 }
 
 // Get validated environment variables
-export function getEnv(): EnvSchema {
-  const result = validateEnv();
+export function getEnv(isClient: boolean): EnvSchema {
+  const result = validateEnv(isClient);
   
-  if (!result.success) {
+  if (!result.success && !isClient) {
     console.error('❌ Environment validation failed:');
     
     if (result.missing.length > 0) {
@@ -134,12 +134,19 @@ export function getEnv(): EnvSchema {
     result.warnings.forEach(warning => console.warn(warning));
   }
   
-  return result.data!;
+  return result.data ?? {
+    NODE_ENV: 'development',
+    NEXTAUTH_URL: '',
+    NEXTAUTH_SECRET: '',
+    PRIMARY_API_URL: '',
+    APP_NAME: 'Labor Hour Calculator',
+    PORT: 3000,
+  };
 }
 
 // Check if specific features are enabled
 export function isFeatureEnabled(feature: 'google-oauth' | 'database' | 'redis'): boolean {
-  const env = getEnv();
+  const env = getEnv(false);
   
   switch (feature) {
     case 'google-oauth':

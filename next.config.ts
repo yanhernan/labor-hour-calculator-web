@@ -12,12 +12,6 @@ const nextConfig: NextConfig = {
     },
   },
   
-  // Environment variable validation
-  env: {
-    // Make sure these are available on the client side if needed
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-  },
-  
   // Security headers
   async headers() {
     return [

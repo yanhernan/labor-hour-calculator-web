@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 
 // Define the validation schema
 const signInSchema = z.object({
-  email: z.string().min(1, 'Email is required').email('Email is invalid'),
+  email: z.email('Email is invalid').min(1, 'Email is required'),
   password: z.string().min(1, 'Password is required'),
 });
 

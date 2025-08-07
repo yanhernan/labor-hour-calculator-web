@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateEnv, isFeatureEnabled } from '@/lib/env/schema';
 import envConfig from '@/lib/env/config';
+import { withLogging } from '@/lib/logging';
 
 export interface HealthCheckResponse {
   status: 'healthy' | 'unhealthy' | 'degraded';
@@ -27,7 +28,7 @@ interface HealthCheck {
 }
 
 // Health check endpoint
-export async function GET(request: NextRequest): Promise<NextResponse> {
+async function healthCheckHandler(request: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
   
   try {
@@ -138,24 +139,22 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 }
 
+// Export the wrapped handler
+export const GET = withLogging(healthCheckHandler);
+
 // Check external services connectivity
 async function checkExternalServices(): Promise<HealthCheck> {
   const checks: Array<{ name: string; url: string; status: 'pass' | 'fail'; message: string; responseTime?: number }> = [];
   
   try {
     // Check auth API connectivity
-    const authApiUrl = envConfig.authApiUrl;
+    const authApiUrl = envConfig.config.api.authUrl;
     if (authApiUrl) {
       const authCheck = await checkServiceHealth(authApiUrl, 'Auth API');
       checks.push(authCheck);
     }
 
     // Check public API connectivity
-    const publicApiUrl = envConfig.publicApiUrl;
-    if (publicApiUrl) {
-      const publicApiCheck = await checkServiceHealth(publicApiUrl, 'Public API');
-      checks.push(publicApiCheck);
-    }
 
     const allPassed = checks.every(check => check.status === 'pass');
     const someFailed = checks.some(check => check.status === 'fail');

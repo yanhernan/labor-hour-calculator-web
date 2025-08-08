@@ -13,13 +13,6 @@ export interface RequestContext {
   userId?: string;
 }
 
-// Extend Request to include context
-declare global {
-  namespace globalThis {
-    var requestContexts: Map<string, RequestContext>;
-  }
-}
-
 // Initialize global request contexts if not exists
 if (typeof globalThis.requestContexts === 'undefined') {
   globalThis.requestContexts = new Map();
@@ -137,7 +130,7 @@ export function withLogging<T extends any[], R>(
   handler: (...args: T) => Promise<NextResponse> | NextResponse
 ) {
   return async (...args: T): Promise<NextResponse> => {
-    const [request] = args as [NextRequest, ...any[]];
+    const [request] = args as any;
     const context = logAPIRequest(request);
 
     try {

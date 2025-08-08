@@ -78,7 +78,7 @@ class EnvironmentConfig {
   }
 
   // API configuration
-  get authApiUrl(): string {
+  get primaryApiUrl(): string {
     return this.env.PRIMARY_API_URL;
   }
 
@@ -125,7 +125,7 @@ class EnvironmentConfig {
         },
       },
       api: {
-        authUrl: this.authApiUrl,
+        authUrl: this.primaryApiUrl,
       },
       features: {
         googleOAuth: this.isGoogleOAuthEnabled,
@@ -147,7 +147,7 @@ class EnvironmentConfig {
     // Check API URLs are reachable (in development)
     if (this.isDevelopment) {
       try {
-        new URL(this.authApiUrl);
+        new URL(this.primaryApiUrl);
       } catch (error) {
         errors.push('Invalid API URL format');
       }
@@ -164,7 +164,7 @@ class EnvironmentConfig {
         errors.push('NEXTAUTH_URL must use HTTPS in production');
       }
 
-      if (!this.authApiUrl.startsWith('https://')) {
+      if (!this.primaryApiUrl.startsWith('https://')) {
         errors.push('PRIMARY_API_URL must use HTTPS in production');
       }
     }

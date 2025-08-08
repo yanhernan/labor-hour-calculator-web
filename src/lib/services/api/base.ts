@@ -1,10 +1,8 @@
-import { getSession } from 'next-auth/react';
-
 import envConfig from '@/lib/env/config';
+import { getSession } from 'next-auth/react';
 
 // API configuration
 export const API_CONFIG = {
-  baseURL: envConfig.publicApiUrl,
   timeout: 10000, // 10 seconds
   retries: 3,
 };
@@ -26,7 +24,7 @@ export class ApiClient {
   private baseURL: string;
   private defaultHeaders: Record<string, string>;
 
-  constructor(baseURL: string = API_CONFIG.baseURL) {
+  constructor(baseURL: string) {
     this.baseURL = baseURL;
     this.defaultHeaders = {
       'Content-Type': 'application/json',
@@ -165,4 +163,4 @@ export class ApiClient {
 }
 
 // Create and export a default API client instance
-export const apiClient = new ApiClient();
+export const apiClient = new ApiClient(envConfig.primaryApiUrl);

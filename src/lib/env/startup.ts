@@ -19,7 +19,7 @@ export function validateEnvironmentOnStartup(): void {
   console.log(`${colors.cyan}${colors.bright}🔍 Validating environment configuration...${colors.reset}`);
   
   try {
-    const validation = validateEnv();
+    const validation = validateEnv(true);
     const configValidation = envConfig.validate();
     
     if (!validation.success) {
@@ -70,7 +70,7 @@ export function validateEnvironmentOnStartup(): void {
     console.log(`${colors.white}  App Name: ${colors.cyan}${config.app.name}${colors.reset}`);
     console.log(`${colors.white}  Port: ${colors.cyan}${config.app.port}${colors.reset}`);
     console.log(`${colors.white}  NextAuth URL: ${colors.cyan}${config.auth.nextAuthUrl}${colors.reset}`);
-    console.log(`${colors.white}  API URL: ${colors.cyan}${config.api.publicUrl}${colors.reset}`);
+    console.log(`${colors.white}  API URL: ${colors.cyan}${config.api.authUrl}${colors.reset}`);
     
     // Show enabled features
     console.log(`${colors.blue}🔧 Enabled Features:${colors.reset}`);
@@ -89,7 +89,7 @@ export function validateEnvironmentOnStartup(): void {
 }
 
 // Check environment in development mode
-export function checkEnvironmentInDevelopment(): void {
+export async function checkEnvironmentInDevelopment(): Promise<void> {
   if (process.env.NODE_ENV !== 'development') {
     return;
   }
@@ -98,8 +98,8 @@ export function checkEnvironmentInDevelopment(): void {
   
   // Check if .env.local exists
   try {
-    const fs = require('fs');
-    const path = require('path');
+    const fs = await import('fs');
+    const path = await import('path');
     const envLocalPath = path.join(process.cwd(), '.env.local');
     
     if (!fs.existsSync(envLocalPath)) {
@@ -114,26 +114,30 @@ export function checkEnvironmentInDevelopment(): void {
   
   // Check API URLs are not using production domains in development
   const config = envConfig.config;
-  if (config.api.publicUrl.includes('localhost') || config.api.publicUrl.includes('127.0.0.1')) {
+  if (config.api.authUrl.includes('localhost') || config.api.authUrl.includes('127.0.0.1')) {
     console.log(`${colors.green}✓ Using local API endpoints${colors.reset}`);
   } else {
-    console.warn(`${colors.yellow}⚠️  Using remote API endpoints in development: ${config.api.publicUrl}${colors.reset}`);
+    console.warn(`${colors.yellow}⚠️  Using remote API endpoints in development: ${config.api.authUrl}${colors.reset}`);
   }
   
   console.log('');
 }
 
 // Export main validation function
-export function validateEnvironment(): void {
+export async function validateEnvironment(): Promise<void> {
   validateEnvironmentOnStartup();
-  checkEnvironmentInDevelopment();
+  await checkEnvironmentInDevelopment();
 }
 
 // Auto-run validation if this file is imported
 if (typeof window === 'undefined' && process.env.NODE_ENV !== 'test') {
   // Only run on server-side and not in tests
   try {
-    validateEnvironment();
+    validateEnvironment().then(() => {
+      console.log('Environment validation complete');
+    }).catch((error) => {
+      console.error('Environment validation failed', error);
+    });
   } catch (error) {
     // Validation already logged the error and exited if needed
   }

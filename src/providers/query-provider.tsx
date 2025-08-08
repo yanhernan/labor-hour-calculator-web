@@ -61,7 +61,6 @@ export default function QueryProvider({ children }: Props) {
       {envConfig.isDevelopment && (
         <ReactQueryDevtools 
           initialIsOpen={false}
-          position="bottom-right"
           buttonPosition="bottom-right"
         />
       )}

@@ -5,7 +5,7 @@ import { NextAuthOptions } from 'next-auth';
 import envConfig from '@/lib/env/config';
 import logger from '@/lib/logging';
 
-export const authOptions: NextAuthOptions = {
+const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: envConfig.googleClientId || '',
@@ -24,7 +24,7 @@ export const authOptions: NextAuthOptions = {
 
         try {
           // Call your authentication API using the AuthService
-          const { api } = await import('@/services/api');
+          const { api } = await import('@/lib/services/api');
           
           logger.logAuth({
             type: 'login',
@@ -33,25 +33,29 @@ export const authOptions: NextAuthOptions = {
           });
 
           const response = await api.auth.login({
-            email: credentials.email,
-            password: credentials.password,
+            data: {
+              type: 'login',
+              attributes: {
+                email: credentials.email,
+                password: credentials.password,
+              },
+            },
           });
 
           // Log successful authentication
           logger.logAuth({
             type: 'login',
             email: credentials.email,
-            userId: response.user.id,
+            userId: response.data.id.toString(),
             success: true,
           });
-
+          const user = response.data.attributes.user;
           // Return user object with token
           return {
-            id: response.user.id,
-            email: response.user.email,
-            name: response.user.name || `${response.user.firstName} ${response.user.lastName}`,
-            image: response.user.image || null,
-            accessToken: response.token, // Store the API token
+            id: response.data.id.toString(),
+            email: response.data.attributes.user.email,
+            name: user.name,
+            accessToken: response.data.attributes.token, // Store the API token
           };
 
         } catch (error) {

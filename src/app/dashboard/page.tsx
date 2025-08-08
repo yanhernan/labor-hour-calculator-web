@@ -71,7 +71,7 @@ export default function Dashboard() {
                 Welcome to Your Dashboard!
               </h2>
               <p className="text-foreground/70 mb-4">
-                You've successfully signed in to Labor Hour Calculator.
+                You&apos;ve successfully signed in to Labor Hour Calculator.
               </p>
               {session.accessToken && (
                 <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">

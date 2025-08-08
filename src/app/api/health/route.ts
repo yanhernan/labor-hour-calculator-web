@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateEnv, isFeatureEnabled } from '@/lib/env/schema';
 import envConfig from '@/lib/env/config';
 import { withLogging } from '@/lib/logging';
+import { fa } from 'zod/locales';
 
 export interface HealthCheckResponse {
   status: 'healthy' | 'unhealthy' | 'degraded';
@@ -33,7 +34,7 @@ async function healthCheckHandler(request: NextRequest): Promise<NextResponse> {
   
   try {
     // Environment validation
-    const envValidation = validateEnv();
+    const envValidation = validateEnv(false);
     const configValidation = envConfig.validate();
     
     // Check environment variables

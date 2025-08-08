@@ -40,7 +40,7 @@ export default function Home() {
             </h1>
             <p className="mt-6 text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
               Identify uncovered work hours, calculate associated costs, and get intelligent recommendations 
-              to optimize your team's labor coverage and reduce operational gaps.
+              to optimize your team&apos;s labor coverage and reduce operational gaps.
             </p>
             <div className="mt-10 flex gap-4 justify-center flex-col sm:flex-row">
               <Link
@@ -68,7 +68,7 @@ export default function Home() {
               The Hidden Cost of Uncovered Hours
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              When your current team template doesn't cover all required work hours, 
+              When your current team template doesn&apos;t cover all required work hours, 
               it leads to overtime costs, productivity gaps, and operational inefficiencies.
             </p>
           </div>

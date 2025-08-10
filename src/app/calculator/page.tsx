@@ -74,86 +74,17 @@ export default function CalculatorPage() {
     const newProposals: Proposal[] = [];
 
     if (hourDifferencePerWorker > 0) {
-      // Case 1: Need to INCREASE hours per worker (original functionality)
-      const uncoveredHoursPerWorker = hourDifferencePerWorker;
-      const totalUncoveredHours = data.numberOfWorkers * uncoveredHoursPerWorker;
-
-      // Option 1: Add extra hours per worker (overtime)
-      if (data.maxExtraHoursPerWorker >= uncoveredHoursPerWorker) {
-        const extraHoursPerWorker = uncoveredHoursPerWorker;
-        const totalExtraHours = extraHoursPerWorker * data.numberOfWorkers;
-        const newTotalHours = totalCurrentWeekHours + totalExtraHours;
-        const extraCost = totalExtraHours * data.hourlyRate * 1.5; // Overtime rate
-        
-        newProposals.push({
-          option: 'Add Extra Hours per Worker',
-          description: `Add ${extraHoursPerWorker} extra hours per worker per week (overtime at 1.5x)`,
-          totalWeeklyHours: newTotalHours,
-          uncoveredHours: 0,
-          costImpact: extraCost,
-          costPercentageChange: (extraCost / currentWeeklyCost) * 100,
-          efficiency: 'Fully covered',
-          details: `${data.numberOfWorkers} workers × ${extraHoursPerWorker} extra hours = ${totalExtraHours} total extra hours × $${(data.hourlyRate * 1.5).toFixed(2)} = $${extraCost.toLocaleString()}`,
-        });
-      }
-
-      // Option 2: Use maximum extra hours per worker
-      if (data.maxExtraHoursPerWorker > 0 && data.maxExtraHoursPerWorker < uncoveredHoursPerWorker) {
-        const extraHoursPerWorker = data.maxExtraHoursPerWorker;
-        const totalExtraHours = extraHoursPerWorker * data.numberOfWorkers;
-        const newTotalHours = totalCurrentWeekHours + totalExtraHours;
-        const remainingUncoveredPerWorker = uncoveredHoursPerWorker - extraHoursPerWorker;
-        const totalRemainingUncovered = remainingUncoveredPerWorker * data.numberOfWorkers;
-        const extraCost = totalExtraHours * data.hourlyRate * 1.5;
-        
-        newProposals.push({
-          option: 'Use Maximum Extra Hours per Worker',
-          description: `Add ${data.maxExtraHoursPerWorker} extra hours per worker (maximum allowed)`,
-          totalWeeklyHours: newTotalHours,
-          uncoveredHours: totalRemainingUncovered,
-          costImpact: extraCost,
-          costPercentageChange: (extraCost / currentWeeklyCost) * 100,
-          efficiency: 'Partially covered',
-          details: `${data.numberOfWorkers} workers × ${data.maxExtraHoursPerWorker} max extra hours = ${totalExtraHours} total extra hours × $${(data.hourlyRate * 1.5).toFixed(2)} = $${extraCost.toLocaleString()}. Still need ${remainingUncoveredPerWorker} hours per worker (${totalRemainingUncovered} total).`,
-        });
-      }
-
-      // Option 3: Hire additional workforce
-      const newWorkersCost = totalUncoveredHours * data.hourlyRate;
-      
+      // Case 1: Target hours GREATER than current hours - NO DEFICIT according to user request
       newProposals.push({
-        option: 'Hire Additional Workforce',
-        description: `Hire additional workforce to cover ${uncoveredHoursPerWorker} hours per worker (${totalUncoveredHours} total hours)`,
-        totalWeeklyHours: totalTargetWeekHours,
+        option: 'No Deficit - Target Exceeds Current',
+        description: `Target hours (${data.targetWeekHoursPerWorker}) are greater than current hours (${data.currentWeekHoursPerWorker}) per worker. No coverage deficit exists.`,
+        totalWeeklyHours: totalCurrentWeekHours,
         uncoveredHours: 0,
-        costImpact: newWorkersCost,
-        costPercentageChange: (newWorkersCost / currentWeeklyCost) * 100,
-        efficiency: 'Fully covered',
-        details: `${totalUncoveredHours} additional hours × $${data.hourlyRate.toFixed(2)} (regular rate) = $${newWorkersCost.toLocaleString()} additional cost`,
+        costImpact: 0,
+        costPercentageChange: 0,
+        efficiency: 'No deficit',
+        details: `Current workforce working ${data.currentWeekHoursPerWorker} hours per worker is sufficient. Target of ${data.targetWeekHoursPerWorker} hours per worker indicates potential for expansion rather than deficit coverage.`,
       });
-
-      // Option 4: Hybrid approach (max extra hours + new workforce)
-      if (data.maxExtraHoursPerWorker > 0 && data.maxExtraHoursPerWorker < uncoveredHoursPerWorker) {
-        const extraHoursPerWorker = data.maxExtraHoursPerWorker;
-        const totalExtraHours = extraHoursPerWorker * data.numberOfWorkers;
-        const remainingUncoveredPerWorker = uncoveredHoursPerWorker - extraHoursPerWorker;
-        const totalRemainingHours = remainingUncoveredPerWorker * data.numberOfWorkers;
-        
-        const extraHoursCost = totalExtraHours * data.hourlyRate * 1.5;
-        const newWorkersCost = totalRemainingHours * data.hourlyRate;
-        const totalCost = extraHoursCost + newWorkersCost;
-        
-        newProposals.push({
-          option: 'Hybrid Approach',
-          description: `Add ${data.maxExtraHoursPerWorker} extra hours per worker + hire workforce for ${remainingUncoveredPerWorker} hours per worker`,
-          totalWeeklyHours: totalTargetWeekHours,
-          uncoveredHours: 0,
-          costImpact: totalCost,
-          costPercentageChange: (totalCost / currentWeeklyCost) * 100,
-          efficiency: 'Fully covered',
-          details: `${totalExtraHours} extra hours at $${(data.hourlyRate * 1.5).toFixed(2)} + ${totalRemainingHours} new workforce hours at $${data.hourlyRate.toFixed(2)} = $${totalCost.toLocaleString()}`,
-        });
-      }
 
     } else if (hourDifferencePerWorker < 0) {
       // Case 2: Need to REDUCE hours per worker while maintaining total hours
@@ -249,7 +180,7 @@ export default function CalculatorPage() {
             Labor Hour Coverage Calculator
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Calculate how many hours are not covered by your current workforce and get proposals to cover the deficit with extra hours or new workers.
+            Analyze your workforce capacity and get proposals for optimizing labor coverage. Shows deficit coverage options or indicates when no deficit exists.
           </p>
         </div>
 
@@ -450,6 +381,8 @@ export default function CalculatorPage() {
                         ? 'border-green-200 bg-green-50'
                         : proposal.efficiency === 'Partially covered'
                         ? 'border-yellow-200 bg-yellow-50'
+                        : proposal.efficiency === 'No deficit'
+                        ? 'border-purple-200 bg-purple-50'
                         : 'border-blue-200 bg-blue-50'
                     }`}
                   >
@@ -461,6 +394,8 @@ export default function CalculatorPage() {
                             ? 'bg-green-100 text-green-800'
                             : proposal.efficiency === 'Partially covered'
                             ? 'bg-yellow-100 text-yellow-800'
+                            : proposal.efficiency === 'No deficit'
+                            ? 'bg-purple-100 text-purple-800'
                             : 'bg-blue-100 text-blue-800'
                         }`}
                       >

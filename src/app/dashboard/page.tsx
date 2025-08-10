@@ -1,8 +1,9 @@
 'use client';
 
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import Link from 'next/link';
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
@@ -31,38 +32,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-white dark:bg-gray-800 shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-foreground">
-                Labor Hour Calculator
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                {session.user?.image && (
-                  <img
-                    className="h-8 w-8 rounded-full"
-                    src={session.user.image}
-                    alt={session.user.name || 'User'}
-                  />
-                )}
-                <span className="text-sm text-foreground">
-                  {session.user?.name || session.user?.email}
-                </span>
-              </div>
-              <button
-                onClick={() => signOut({ callbackUrl: '/' })}
-                className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-              >
-                Sign Out
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="border-4 border-dashed border-gray-200 dark:border-gray-700 rounded-lg h-96 flex items-center justify-center">
@@ -80,10 +49,20 @@ export default function Dashboard() {
                   </p>
                 </div>
               )}
-              <p className="text-sm text-foreground/50">
+              <p className="text-sm text-foreground/50 mb-6">
                 This is where your labor hour tracking features will be implemented.
               </p>
-              <p className="text-xs text-foreground/40 mt-2">
+              
+              <div className="space-y-4">
+                <Link
+                  href="/calculator"
+                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                >
+                  🧮 Labor Hour Calculator
+                </Link>
+              </div>
+              
+              <p className="text-xs text-foreground/40 mt-4">
                 Session includes: User ID, Name, Email{session.accessToken ? ', and API Token' : ''}
               </p>
             </div>
